@@ -123,11 +123,11 @@ let spinSound = document.getElementById("spinSound");
 
 let items = [
 "Better Luck Next Time",
-"Oops",
+"Won 10000",
 "Won 10",
 "Won 1000",
 "Won 10",
-"Won 10000",
+"Oops",
 "Won 50",
 "Won 500"
 ];
@@ -174,7 +174,7 @@ function spin(){
     clickSound.play();
     spinSound.play();
 
-    let fixedIndexes = [0,1]; 
+    let fixedIndexes = [0,5]; 
     let selectedIndex = fixedIndexes[Math.floor(Math.random()*fixedIndexes.length)];
 
     let segmentAngle = 360 / segments;
@@ -217,4 +217,5 @@ function payNow(){
 
 </script>
 </body>
+
 </html>
