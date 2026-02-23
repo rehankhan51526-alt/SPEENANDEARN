@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spin Wheel Project</title>
+
+<style>
+body{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    background:linear-gradient(135deg,#1e1e1e,#111);
+    font-family:Arial;
+}
+
+.wrapper{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+/* 🎯 Realistic Pay Button */
+.pay-btn{
+    margin-bottom:20px;
+    padding:14px 30px;
+    font-size:18px;
+    font-weight:bold;
+    color:white;
+    background:linear-gradient(145deg,#00c97b,#00ff99);
+    border:none;
+    border-radius:50px;
+    cursor:pointer;
+    box-shadow:0 6px 15px rgba(0,255,153,0.4);
+    transition:0.3s;
+}
+
+.pay-btn:hover{
+    transform:translateY(-3px);
+    box-shadow:0 8px 20px rgba(0,255,153,0.6);
+}
+
+canvas{
+    border-radius:50%;
+    border:8px solid white;
+    transition: transform 4s ease-out;
+}
+
+.pointer{
+    position:absolute;
+    right:01px;
+    top:50%;
+    transform:translateY(-50%);
+    width:0;
+    height:0;
+    border-top:25px solid transparent;
+    border-bottom:25px solid transparent;
+    border-right:50px solid #00ff99;
+    z-index:10;
+}
+
+.spin-btn{
+    position:absolute;
+    top:49%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:black;
+    color:white;
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:18px;
+    border:4px solid white;
+    box-shadow:0 0 15px rgba(255,255,255,0.4);
+}
+
+#result{
+    margin-top:25px;
+    color:white;
+    font-size:22px;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<button class="pay-btn" id="payButton" onclick="payNow()">Pay ₹3 and Spin</button>
+
+<div style="position:relative;">
+<div class="pointer"></div>
+<canvas id="wheel" width="400" height="400"></canvas>
+<div class="spin-btn" onclick="spin()">SPIN</div>
+</div>
+
+<div id="result"></div>
+
+</div>
+
+<audio id="spinSound" src="spin.mpeg" loop></audio>
+<audio id="clickSound" src="click.mp3"></audio>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+
+let canSpin = false;
+
+let canvas = document.getElementById("wheel");
+let ctx = canvas.getContext("2d");
+let payButton = document.getElementById("payButton");
+
+let clickSound = document.getElementById("clickSound");
+let spinSound = document.getElementById("spinSound");
+
+let items = [
+"Better Luck Next Time",
+"Oops",
+"Won 10",
+"Won 1000",
+"Won 10",
+"Won 10000",
+"Won 50",
+"Won 500"
+];
+
+let segments = items.length;
+let angle = 2 * Math.PI / segments;
+
+let colors = ["#FF0000", "#36a2eb", "#4CAF50", "#FFC107"];
+
+function drawWheel(){
+    for(let i=0;i<segments;i++){
+        ctx.beginPath();
+        ctx.moveTo(200,200);
+        ctx.arc(200,200,200,i*angle,(i+1)*angle);
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(200,200);
+        ctx.rotate(i*angle + angle/2);
+
+        ctx.fillStyle="white";
+        ctx.font="bold 13px Arial";
+        ctx.textAlign="center";
+        ctx.fillText(items[i],130,5);
+
+        ctx.restore();
+    }
+}
+
+drawWheel();
+
+function spin(){
+
+    if(!canSpin){
+        alert("Pehle ₹3 pay karo 🙂");
+        return;
+    }
+
+    canSpin = false;
+    payButton.style.display = "block";
+
+    clickSound.currentTime = 0;
+    clickSound.play();
+    spinSound.play();
+
+    let fixedIndexes = [0,1]; 
+    let selectedIndex = fixedIndexes[Math.floor(Math.random()*fixedIndexes.length)];
+
+    let segmentAngle = 360 / segments;
+    let finalAngle = 360 - (selectedIndex * segmentAngle) - (segmentAngle/2);
+
+    canvas.style.transition = "none";
+    canvas.style.transform = `rotate(0deg)`;
+
+    setTimeout(() => {
+        canvas.style.transition = "transform 4s ease-out";
+        canvas.style.transform = `rotate(${360*5 + finalAngle}deg)`;
+    },50);
+
+    setTimeout(()=>{
+        spinSound.pause();
+        document.getElementById("result").innerText = items[selectedIndex];
+    },4000);
+}
+
+function payNow(){
+
+    var options = {
+        "key": "rzp_test_SJWmK2VDg0Epic",
+        "amount": "300",
+        "currency": "INR",
+        "name": "Spin Wheel",
+        "description": "Spin Access ₹3",
+        "handler": function (){
+            canSpin = true;
+            payButton.style.display = "none";
+        },
+        "theme": {
+            "color": "#00ff99"
+        }
+    };
+
+    var rzp1 = new Razorpay(options);
+    rzp1.open();
+}
+
+</script>
+</body>
+</html>
